@@ -1,0 +1,75 @@
+local Workspace = game:GetService("Workspace")
+local ServerStorage = game:GetService("ServerStorage")
+
+local generatorsFolder = Workspace:WaitForChild("Generators")
+local foodsFolder = Workspace:WaitForChild("Foods")
+local storedFoods = ServerStorage:WaitForChild("Foods")
+
+-- Store generator points in an array
+local generatorsArray = generatorsFolder:GetChildren()
+
+-- Cache all food models for faster cloning
+local foodModels = {
+	storedFoods:WaitForChild("Food1"),
+	storedFoods:WaitForChild("Food2"),
+	storedFoods:WaitForChild("Food3"),
+	storedFoods:WaitForChild("Food4"),
+	storedFoods:WaitForChild("Food5"),
+	storedFoods:WaitForChild("Food6"),
+	storedFoods:WaitForChild("Food7"),
+	storedFoods:WaitForChild("Food8"),
+	storedFoods:WaitForChild("Food9")
+}
+
+-- Current counters for each tier
+local counts = {0, 0, 0, 0, 0, 0, 0, 0}
+-- Target thresholds to spawn a higher tier food
+local limits = {3, 10, 30, 90, 280, 450, 900, 2000}
+
+while task.wait(0.2) do
+	if #foodsFolder:GetChildren() < 3000 then
+		local generator = generatorsArray[math.random(1, #generatorsArray)]
+		local spawnLocation = generator.CFrame * CFrame.new(0, 2, 0)
+		local foodToSpawn = nil
+
+		-- Check from the highest tier downwards
+		if counts[8] >= limits[8] then
+			foodToSpawn = foodModels[9]
+			counts[8] = 0
+		elseif counts[7] >= limits[7] then
+			foodToSpawn = foodModels[8]
+			counts[7] = 0
+		elseif counts[6] >= limits[6] then
+			foodToSpawn = foodModels[7]
+			counts[6] = 0
+		elseif counts[5] >= limits[5] then
+			foodToSpawn = foodModels[6]
+			counts[5] = 0
+		elseif counts[4] >= limits[4] then
+			foodToSpawn = foodModels[5]
+			counts[4] = 0
+		elseif counts[3] >= limits[3] then
+			foodToSpawn = foodModels[4]
+			counts[3] = 0
+		elseif counts[2] >= limits[2] then
+			foodToSpawn = foodModels[3]
+			counts[2] = 0
+		elseif counts[1] >= limits[1] then
+			foodToSpawn = foodModels[2]
+			counts[1] = 0
+		else
+			-- Default spawn if no limits are reached
+			foodToSpawn = foodModels[1]
+		end
+
+		-- Clone and position the selected food
+		local clone = foodToSpawn:Clone()
+		clone.Parent = foodsFolder
+		clone.CFrame = spawnLocation
+
+		-- Increment all counters globally for the next iteration
+		for i = 1, #counts do
+			counts[i] += 1
+		end
+	end
+end
