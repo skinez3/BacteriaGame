@@ -1,0 +1,105 @@
+local Players = game:GetService("Players")
+local ServerStorage = game:GetService("ServerStorage")
+local Workspace = game:GetService("Workspace")
+
+local deadBacteriaModel = ServerStorage:WaitForChild("Foods"):WaitForChild("DeadBacteria")
+local foodsFolder = Workspace:WaitForChild("Foods")
+
+local function onHumanoidDied(humanoid, player)
+	local stats = player:FindFirstChild("leaderstats")
+	if not stats then return end
+	
+	local points = stats:FindFirstChild("Points")
+	if points then
+		-- Mark the player as being eaten
+		if humanoid.Parent then
+			humanoid.Parent:SetAttribute("eating", true)
+		end
+		
+		local pointValue = tonumber(points.Value) or 0
+		
+		-- If the player had more than 100 points, spawn remains
+		if pointValue > 100 then
+			local droppedFood = deadBacteriaModel:Clone()
+			
+			-- The player drops 50% of their points
+			local dropAmount = math.floor(pointValue * 0.5)
+			droppedFood:SetAttribute("food", dropAmount)
+			
+			droppedFood.Parent = foodsFolder
+			
+			-- Spawn loot slightly above the head position
+			local head = humanoid.Parent:FindFirstChild("Head")
+			if head then
+				droppedFood.CFrame = head.CFrame * CFrame.new(0, 3, 0)
+			end
+		end
+		
+		-- Reset points on death
+		points.Value = 0
+	end
+end
+
+local function onCharacterAdded(character, player)
+	local humanoid = character:WaitForChild("Humanoid")
+	humanoid.Died:Connect(function()
+		onHumanoidDied(humanoid, player)
+	end)
+end
+
+local function onPlayerAdded(player)
+	-- Create leaderstats folder
+	local stats = Instance.new("Folder")
+	stats.Name = "leaderstats"
+	stats.Parent = player
+
+	-- Use IntValue instead of StringValue for correct sorting in the Roblox leaderboard
+	local points = Instance.new("IntValue")
+	points.Name = "Points"
+	points.Value = 0
+	points.Parent = stats
+
+	-- Modern method to track character spawning
+	player.CharacterAdded:Connect(function(character)
+		onCharacterAdded(character, player)
+	end)
+	
+	-- If the character has already loaded by this point
+	if player.Character then
+		onCharacterAdded(player.Character, player)
+	end
+end
+
+-- Connect the function to the player join event
+Players.PlayerAdded:Connect(onPlayerAdded)
+
+
+-----------------------------------------------
+-- UI formatting functions 
+-- (Kept for potential use in the UI)
+-----------------------------------------------
+
+local function formatAbbreviation(n)
+	if n >= 10^30 then return string.format("%.2fq", n / 10^30)
+	elseif n >= 10^27 then return string.format("%.2fr", n / 10^27)
+	elseif n >= 10^24 then return string.format("%.2fy", n / 10^24)
+	elseif n >= 10^21 then return string.format("%.2fz", n / 10^21)
+	elseif n >= 10^18 then return string.format("%.2fe", n / 10^18)
+	elseif n >= 10^15 then return string.format("%.2fp", n / 10^15)
+	elseif n >= 10^12 then return string.format("%.2ft", n / 10^12)
+	elseif n >= 10^9 then return string.format("%.2fg", n / 10^9)
+	elseif n >= 10^6 then return string.format("%.2fm", n / 10^6)
+	elseif n >= 10^3 then return string.format("%.2fk", n / 10^3)
+	else return tostring(n) end
+end
+
+local function formatComma(num)
+	-- Optimized comma formatting algorithm (e.g., 1,000,000)
+	local formatted = tostring(math.floor(num))
+	while true do  
+		local k
+		formatted, k = string.gsub(formatted, "^(-?%d+)(%d%d%d)", '%1,%2')
+		if k == 0 then break end
+	end
+	return formatted
+end
