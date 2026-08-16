@@ -1,0 +1,54 @@
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local ServerStorage = game:GetService("ServerStorage")
+local Teams = game:GetService("Teams")
+
+local GetToolEvent = ReplicatedStorage:WaitForChild("ChooseBacteria")
+local storageBacteria = ServerStorage:FindFirstChild("bacteria")
+
+-- Dictionary containing stats for each selectable bacteria class
+local classConfigs = {
+	["Bacteria1"]   = { team = "Pseudomonas necrophila", gen = {1, 0.2, 0.5, 0.4, 0.7} },
+	["Bacteria2"]   = { team = "Salmonella maligna",     gen = {0.2, 1, 0.6, 0.4, 0.6} },
+	["Bacteria3"]   = { team = "Staphylococcus pestis",  gen = {0.5, 0.5, 1, 0.5, 0.3} },
+	["Bacteria4"]   = { team = "Bacillus venenatus",     gen = {0.6, 0.6, 0.4, 1, 0.2} },
+	["BacteriaPro"] = { team = "Vibrio mortiferus",      gen = {0.4, 0.5, 0.6, 0.3, 1} }
+}
+
+GetToolEvent.OnServerEvent:Connect(function(player, bacteriaName)
+	local character = player.Character
+	if not character then return end
+
+	-- Remove the previous mesh part if it exists
+	local oldMesh = character:FindFirstChildOfClass("MeshPart")
+	if oldMesh then
+		oldMesh:Destroy()
+	end
+
+	-- Clone and attach the new bacteria model
+	local bacteriaModel = storageBacteria:WaitForChild(bacteriaName):Clone()
+	bacteriaModel.Parent = character
+	
+	local weld = Instance.new("Weld")
+	weld.Parent = character
+	weld.Part0 = character.Head
+	weld.Part1 = bacteriaModel
+	
+	character.Head.Transparency = 0
+	character.Humanoid.WalkSpeed = 20
+	
+	-- Apply team and specific genome attributes based on the selected class
+	local config = classConfigs[bacteriaName]
+	if config then
+		player.Team = Teams[config.team]
+		character:SetAttribute("GenA", config.gen[1])
+		character:SetAttribute("GenB", config.gen[2])
+		character:SetAttribute("GenC", config.gen[3])
+		character:SetAttribute("GenD", config.gen[4])
+		character:SetAttribute("GenE", config.gen[5])
+	end
+	
+	-- Set default player stats
+	character:SetAttribute("Level", 1)
+	character:SetAttribute("Attack", 0)
+	character:SetAttribute("digestion", 1)
+end)
