@@ -8,10 +8,10 @@ Players spawn into a massive petri dish as one of five bacteria strains, competi
 
 <div style="overflow-x: auto; padding: 10px 0;">
    <img src="images/BacteriaGame.jpg" height="300" style="margin-right: 10px;" />
-   <img src="images/Bacteria.gif" height="300" style="margin-right: 10px;" />
 </div>
 <table>
   <tr>
+     <td><img src="images/Bacteria.gif" width="300"></td>
      <td><img src="images/Bacteria1.jpg" width="300"></td>
      <td><img src="images/Bacteria2.jpg" width="300"></td>
      <td><img src="images/Bacteria3.jpg" width="300"></td>
