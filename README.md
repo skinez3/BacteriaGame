@@ -6,6 +6,19 @@ This project is a multiplayer microscopic survival and strategy game developed o
 
 Players spawn into a massive petri dish as one of five bacteria strains, competing for resources, mutating their genomes, and surviving against both enemy players and AI-driven environmental threats.
 
+<div style="overflow-x: auto; padding: 10px 0;">
+   <img src="images/BacteriaGame.jpg" height="300" style="margin-right: 10px;" />
+   <img src="images/Bacteria.gif" height="300" style="margin-right: 10px;" />
+</div>
+<table>
+  <tr>
+     <td><img src="images/Bacteria1.jpg" width="300"></td>
+     <td><img src="images/Bacteria2.jpg" width="300"></td>
+     <td><img src="images/Bacteria3.jpg" width="300"></td>
+     <td><img src="images/Bacteria4.png" width="300"></td>
+  </tr>
+</table>
+
 ---
 
 ## Core Gameplay Loop
