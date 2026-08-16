@@ -1,0 +1,67 @@
+local ServerStorage = game:GetService("ServerStorage")
+local Workspace = game:GetService("Workspace")
+
+local stbot = ServerStorage:FindFirstChild("bot").Bot
+local botsFolder = Workspace:FindFirstChild("Bots")
+local playersFolder = game:FindFirstChild("Players")
+local spawnsFolder = Workspace:FindFirstChild("Spawn")
+local storBacteria = ServerStorage:FindFirstChild("bacteria")
+
+-- Cache spawn points into an array
+local spawnsArray = spawnsFolder:GetChildren()
+
+-- Configuration table for bot classes to avoid repetitive code
+local botConfigs = {
+	{ model = "Bacteria1big", name = "Bot A", team = "Pseudomonas necrophila", offset = 0.4, gen = {1, 0.2, 0.5, 0.4, 0.7} },
+	{ model = "Bacteria2big", name = "Bot B", team = "Salmonella maligna",     offset = 0.4, gen = {0.2, 1, 0.6, 0.4, 0.6} },
+	{ model = "Bacteria3big", name = "Bot C", team = "Staphylococcus pestis",  offset = 0.4, gen = {0.5, 0.5, 1, 0.5, 0.3} },
+	{ model = "Bacteria4big", name = "Bot D", team = "Bacillus venenatus",     offset = 0.3, gen = {0.6, 0.6, 0.4, 1, 0.2} },
+	{ model = "BacteriaProbig", name = "Bot E", team = "Vibrio mortiferus",    offset = 0.0, gen = {0.4, 0.5, 0.6, 0.3, 1} }
+}
+
+while task.wait(5) do
+	local totalEntities = #playersFolder:GetChildren() + #botsFolder:GetChildren()
+
+	-- Spawn a new bot if population is below threshold
+	if totalEntities <= 35 then
+		local randomSpawn = spawnsArray[math.random(1, #spawnsArray)]
+		local config = botConfigs[math.random(1, #botConfigs)]
+		
+		local bot = stbot:Clone()
+		local bacteriaModel = storBacteria:WaitForChild(config.model):Clone()
+		bacteriaModel.Parent = bot
+		
+		-- Weld the bacteria mesh to the bot
+		local weld = Instance.new("Weld")
+		weld.Parent = bot
+		weld.Part0 = bot.Head
+		weld.Part1 = bacteriaModel
+		weld.C1 = CFrame.new(0, config.offset, 0)
+		
+		-- Set base properties
+		bot:ScaleTo(2)
+		bot.Humanoid.WalkSpeed = 15
+		bot.Name = config.name
+		
+		-- Apply class attributes
+		bot:SetAttribute("GenA", config.gen[1])
+		bot:SetAttribute("GenB", config.gen[2])
+		bot:SetAttribute("GenC", config.gen[3])
+		bot:SetAttribute("GenD", config.gen[4])
+		bot:SetAttribute("GenE", config.gen[5])
+		bot:SetAttribute("Team", config.team)
+		
+		-- Parent and position the bot
+		bot.Parent = botsFolder
+		bot.PrimaryPart.CFrame = randomSpawn.CFrame * CFrame.new(0, 1, 0)
+
+	-- Destroy some bots to free up memory if population is too high
+	elseif totalEntities >= 45 then
+		for i = 1, 5 do
+			local botToDestroy = botsFolder:FindFirstChildOfClass("Model")
+			if botToDestroy then
+				botToDestroy:Destroy()
+			end
+		end
+	end
+end
