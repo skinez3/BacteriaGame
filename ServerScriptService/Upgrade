@@ -1,0 +1,151 @@
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local ServerStorage = game:GetService("ServerStorage")
+
+local GetToolEvent = ReplicatedStorage:WaitForChild("Upgrade")
+local storageBacteria = ServerStorage:FindFirstChild("bacteria")
+local toolsFolder = ServerStorage:FindFirstChild("Tools")
+local turretsFolder = ServerStorage:FindFirstChild("turrets")
+
+-- Configuration dictionary for each bacteria class (contains models, weapons, and turrets)
+local bacteriaConfigs = {
+	["Bacteria1"]   = { big = "Bacteria1big",   big2 = "Bacteria1big2",   tool = "GreenToxin",      turret = "TurretA", weld1 = 0.4, weld2 = 0.5 },
+	["Bacteria2"]   = { big = "Bacteria2big",   big2 = "Bacteria2big2",   tool = "PurpleToxin",     turret = "TurretB", weld1 = 0.4, weld2 = 0.5 },
+	["Bacteria3"]   = { big = "Bacteria3big",   big2 = "Bacteria3big2",   tool = "YellowToxin",     turret = "TurretC", weld1 = 0.4, weld2 = 0.2 },
+	["Bacteria4"]   = { big = "Bacteria4big",   big2 = "Bacteria4big2",   tool = "DarkgreenToxin",  turret = "TurretD", weld1 = 0.3, weld2 = 0.0 },
+	["BacteriaPro"] = { big = "BacteriaProbig", big2 = "BacteriaProbig2", tool = "PinkToxin",       turret = "TurretE", weld1 = 0.0, weld2 = 0.4 }
+}
+
+-- Dictionary for point rewards and level rollbacks upon division at high levels
+local divisionPointsMap = {
+	[12] = {points = 2700, newLevel = 10},
+	[13] = {points = 3400, newLevel = 11},
+	[14] = {points = 4200, newLevel = 12},
+	[15] = {points = 5000, newLevel = 13},
+	[16] = {points = 6000, newLevel = 14},
+	[17] = {points = 8000, newLevel = 15},
+	[18] = {points = 10000, newLevel = 16},
+	[19] = {points = 13000, newLevel = 17},
+	[20] = {points = 18000, newLevel = 18},
+	[21] = {points = 30000, newLevel = 19}
+}
+
+-- Helper function to determine the player's current bacteria class
+local function getPlayerBacteriaConfig(character)
+	for baseName, config in pairs(bacteriaConfigs) do
+		if character:FindFirstChild(baseName) or character:FindFirstChild(config.big) or character:FindFirstChild(config.big2) then
+			return baseName, config
+		end
+	end
+	return nil, nil
+end
+
+-- Helper function to quickly replace the model (Mesh)
+local function replaceMesh(character, newMeshName, yOffset)
+	local oldMesh = character:FindFirstChildOfClass("MeshPart")
+	if oldMesh then oldMesh:Destroy() end
+	
+	local newMesh = storageBacteria:WaitForChild(newMeshName):Clone()
+	newMesh.Parent = character
+	
+	local weld = Instance.new("Weld")
+	weld.Parent = character
+	weld.Part0 = character.Head
+	weld.Part1 = newMesh
+	weld.C1 = CFrame.new(0, yOffset or 0, 0)
+end
+
+GetToolEvent.OnServerEvent:Connect(function(player, actionName, amount)
+	local character = player.Character
+	if not character then return end
+	
+	local humanoid = character:FindFirstChild("Humanoid")
+	local currentLevel = character:GetAttribute("Level")
+	
+	local baseName, config = getPlayerBacteriaConfig(character)
+	if not config then return end
+
+	-- Transition to level 5 (Giving weapon)
+	if currentLevel == 4 and actionName ~= "division" then
+		character:ScaleTo(1)
+		replaceMesh(character, config.big, config.weld1)
+		
+		local tool = toolsFolder:WaitForChild(config.tool):Clone()
+		tool.Parent = player.Backpack
+		
+		character:ScaleTo(1.6)
+		character:SetAttribute("Attack", 1)
+	end
+	
+	-- Transition to level 10
+	if currentLevel == 9 and actionName ~= "division" then
+		character:ScaleTo(1)
+		replaceMesh(character, config.big2, config.weld2)
+		character:ScaleTo(2.6)
+	end
+	
+	local stats = player:FindFirstChild("leaderstats")
+	local pointsValue = stats and stats:FindFirstChild("Points")
+
+	-- Cell division logic
+	if actionName == "division" then
+		if currentLevel >= 10 then
+			-- Spawn turret
+			local turret = turretsFolder:WaitForChild(config.turret):Clone()
+			turret.Parent = workspace:FindFirstChild("Turrets") or workspace
+			
+			local zOffset = (currentLevel >= 12) and -40 or -30
+			turret.PrimaryPart.CFrame = character.Head.CFrame * CFrame.new(0, 0, zOffset)
+			
+			-- Transfer attributes from player to turret
+			local attrsToTransfer = {"Attack", "GenA", "GenB", "GenC", "GenD", "GenE"}
+			for _, attr in ipairs(attrsToTransfer) do
+				turret:SetAttribute(attr, character:GetAttribute(attr))
+			end
+
+			-- Rollback visual model and levels
+			if currentLevel == 10 then
+				character:ScaleTo(1)
+				replaceMesh(character, config.big, config.weld1)
+				character:ScaleTo(2.4)
+				if pointsValue then pointsValue.Value = 1500 end
+				character:SetAttribute("Level", 8)
+				
+			elseif currentLevel == 11 then
+				character:ScaleTo(1)
+				replaceMesh(character, config.big, config.weld1)
+				character:ScaleTo(2.6)
+				if pointsValue then pointsValue.Value = 2100 end
+				character:SetAttribute("Level", 9)
+				
+			elseif currentLevel >= 12 then
+				character:ScaleTo(character:GetScale() - 0.4)
+				local divData = divisionPointsMap[currentLevel]
+				if divData then
+					if pointsValue then pointsValue.Value = divData.points end
+					character:SetAttribute("Level", divData.newLevel)
+				end
+			end
+			
+			humanoid.MaxHealth = humanoid.MaxHealth - 20
+		end
+	else
+		-- Standard stat upgrade logic
+		local newValue = amount + (character:GetAttribute(actionName) or 0)
+		character:SetAttribute(actionName, newValue)
+		character:SetAttribute("Level", currentLevel + 1)
+		character:ScaleTo(character:GetScale() + 0.2)
+		
+		humanoid.MaxHealth = humanoid.MaxHealth + 10
+		humanoid.Health = humanoid.Health + 10
+	end
+	
+	-- Speed adjustment
+	local newLevel = character:GetAttribute("Level")
+	humanoid.WalkSpeed = (newLevel < 5) and 20 or 16
+	
+	-- Force UI update (workaround from the original script to redraw the value)
+	if pointsValue then
+		pointsValue.Value = pointsValue.Value + 1
+		pointsValue.Value = pointsValue.Value - 1
+	end
+end)
