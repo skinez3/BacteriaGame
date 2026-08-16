@@ -1,0 +1,125 @@
+local Players = game:GetService("Players")
+local Debris = game:GetService("Debris")
+local Workspace = game:GetService("Workspace")
+
+local character = script.Parent
+local Player = Players:GetPlayerFromCharacter(character)
+
+local humanoidRootPart = character:WaitForChild("HumanoidRootPart")
+local head = character:WaitForChild("Head")
+local region = head:WaitForChild("Region")
+
+-- Dictionary storing the maximum digestion time for each food type
+local foodDigestionTimes = {
+	["Food1"] = 5,
+	["Food2"] = 10,
+	["Food3"] = 20,
+	["Food4"] = 40,
+	["Food5"] = 60,
+	["Food6"] = 240,
+	["Food7"] = 400,
+	["Food8"] = 750,
+	["Food9"] = 1400,
+	["DeadBacteria"] = 50
+}
+
+-- Function to visually emit particles towards the player
+local function emitter(food)
+	-- Safety check in case PartStorage doesn't exist yet
+	local partStorage = Workspace:FindFirstChild("PartStorage") or Workspace
+	
+	while true do
+		task.wait(0.5)
+		if not food or not food.Parent then break end
+		
+		local part = Instance.new("Part")
+		part.BrickColor = BrickColor.new(18)
+		part.Transparency = 0.3
+		part.CanCollide = false
+		part.FormFactor = Enum.FormFactor.Custom
+		part.Size = Vector3.new(0.5, 0.5, 0.5)
+		part.TopSurface = Enum.SurfaceType.Smooth
+		part.BottomSurface = Enum.SurfaceType.Smooth
+		part.CFrame = food.CFrame
+		part.Parent = partStorage
+		
+		local attachment = Instance.new("Attachment", part)
+		
+		local force = Instance.new("LinearVelocity", attachment)
+		force.MaxForce = math.huge
+		force.VectorVelocity = CFrame.new(part.Position, humanoidRootPart.Position).LookVector * 10
+		force.Attachment0 = attachment
+		
+		Debris:AddItem(part, 2.5)
+	end
+end
+
+local function onTouched(part)
+	-- Check if player is allowed to eat and is not currently eating
+	if character:GetAttribute("eating") or character:GetAttribute("Need") <= 0 then return end
+	
+	-- Verify this part is a valid food item and hasn't been eaten yet
+	local maxT = foodDigestionTimes[part.Name]
+	if maxT and part:GetAttribute("eated") == false then
+		
+		character:SetAttribute("eating", true)
+		part:SetAttribute("eated", true)
+		
+		-- Start the particle emitter
+		local emitterThread = task.spawn(emitter, part)
+		
+		local foodValue = part:GetAttribute("food") or 0
+		local currentT = maxT
+		
+		-- Assuming the visual mesh is named exactly like the food part
+		local visualMesh = part:FindFirstChild(part.Name)
+		
+		-- Digestion loop
+		while currentT > 0 do
+			local distance = (part.Position - humanoidRootPart.Position).Magnitude
+			
+			if distance <= region.Size.X then
+				currentT -= character:GetAttribute("digestion")
+				task.wait(1)
+				
+				-- Calculate transparency dynamically using percentages
+				if visualMesh then
+					local ratio = currentT / maxT
+					
+					if ratio <= 0.8 and ratio > 0.6 then visualMesh.Transparency = 0.2
+					elseif ratio <= 0.6 and ratio > 0.4 then visualMesh.Transparency = 0.4
+					elseif ratio <= 0.4 and ratio > 0.2 then visualMesh.Transparency = 0.6
+					elseif ratio <= 0.2 and ratio > 0 then visualMesh.Transparency = 0.8 end
+				end
+			else
+				-- Player moved away, cancel eating
+				if visualMesh then visualMesh.Transparency = 0 end
+				part:SetAttribute("eated", false)
+				break
+			end
+		end
+		
+		-- If successfully digested
+		if part:GetAttribute("eated") then
+			part:Destroy()
+			
+			-- Only award points if the player still needs food
+			if character:GetAttribute("Need") > 0 and Player then
+				local stats = Player:FindFirstChild("leaderstats")
+				local points = stats and stats:FindFirstChild("Points")
+				if points then
+					points.Value += foodValue
+				end
+			end
+		end
+		
+		-- Cleanup and reset state
+		task.cancel(emitterThread)
+		character:SetAttribute("eating", false)
+		region.CanTouch = false
+		task.wait() 
+		region.CanTouch = true
+	end
+end
+
+region.Touched:Connect(onTouched)
