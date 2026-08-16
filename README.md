@@ -4,7 +4,7 @@
 
 This project is a multiplayer microscopic survival and strategy game developed on the Roblox platform (using Luau). It blends classic Agar.io-style foraging and growth with deep RPG progression, asymmetric class balancing, PvP combat, and Tower Defense mechanics. 
 
-Players spawn into a massive petri dish as one of five bacteria strains, competing for resources, mutating their genomes, and surviving against both enemy players and AI-driven environmental threats.
+Players spawn in the intestines as one of five bacteria strains, competing for resources, mutating their genomes, and surviving against both enemy players and AI-driven environmental threats.
 
 <div style="overflow-x: auto; padding: 10px 0;">
    <img src="images/BacteriaGame.jpg" height="300" style="margin-right: 10px;" />
