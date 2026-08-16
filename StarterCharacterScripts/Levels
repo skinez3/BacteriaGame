@@ -1,0 +1,56 @@
+local character = script.Parent
+local Player = game:GetService("Players"):GetPlayerFromCharacter(character)
+
+local stats = Player:findFirstChild("leaderstats")
+local Points
+
+local lv = {
+	0,--lv1
+	25,--lv2
+	50,--lv3
+	100,--lv4
+	250,--lv5
+	500,--lv6
+	1000,--lv7
+	1500,--lv8
+	2100,--lv9
+	2700,--lv10
+	3400,--lv11
+	4200,--lv12
+	5000,--lv13
+	6000,--lv14
+	8000,--lv15
+	10000,--lv16
+	13000,--lv17
+	18000,--lv18
+	30000,--lv19
+	100000,--lv20
+	50000000--lv21
+}
+
+function onChange()
+	if stats ~= nil then
+		Points = stats:findFirstChild("Points")
+		if Points then
+			character:SetAttribute("Need",lv[character:GetAttribute("Level")+1]-Points.Value)
+			--[[
+			if character:GetAttribute("Need") <= 0 then
+				Player.PlayerGui.ScreenGui.Stats.Upgrade.Visible = true
+			end
+			]]
+		end
+	end
+end
+
+while true do
+	if stats ~= nil then
+		onChange()
+		Points = stats:findFirstChild("Points")
+		break
+	end
+	wait(2)
+	stats = Player:findFirstChild("leaderstats")
+end
+
+
+Points.Changed:Connect(onChange)
