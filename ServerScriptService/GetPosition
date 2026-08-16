@@ -1,0 +1,18 @@
+local rep = game:GetService("ReplicatedStorage")
+local GetPosition = rep:WaitForChild("GetPosition")
+
+GetPosition.OnServerInvoke = function(Player)
+	local pos = {}
+	local team = Player.Team
+	if team ~= nil then
+		local teammates = game:GetService("Teams")[team.Name]:GetPlayers()
+		for i,v in teammates do
+			if v ~= Player then
+				local PosplX = v.Character.PrimaryPart.Position.X
+				local PosplZ = v.Character.PrimaryPart.Position.Z
+				table.insert(pos,{PosplX,PosplZ})
+			end
+		end
+	end
+	return(pos)
+end
