@@ -6,7 +6,7 @@ local storageBacteria = ServerStorage:FindFirstChild("bacteria")
 local toolsFolder = ServerStorage:FindFirstChild("Tools")
 local turretsFolder = ServerStorage:FindFirstChild("turrets")
 
--- Configuration dictionary for each bacteria class (contains models, weapons, and turrets)
+-- Configuration dictionary for each bacteria class
 local bacteriaConfigs = {
 	["Bacteria1"]   = { big = "Bacteria1big",   big2 = "Bacteria1big2",   tool = "GreenToxin",      turret = "TurretA", weld1 = 0.4, weld2 = 0.5 },
 	["Bacteria2"]   = { big = "Bacteria2big",   big2 = "Bacteria2big2",   tool = "PurpleToxin",     turret = "TurretB", weld1 = 0.4, weld2 = 0.5 },
@@ -39,7 +39,7 @@ local function getPlayerBacteriaConfig(character)
 	return nil, nil
 end
 
--- Helper function to quickly replace the model (Mesh)
+-- Helper function to quickly replace the model
 local function replaceMesh(character, newMeshName, yOffset)
 	local oldMesh = character:FindFirstChildOfClass("MeshPart")
 	if oldMesh then oldMesh:Destroy() end
@@ -143,7 +143,7 @@ GetToolEvent.OnServerEvent:Connect(function(player, actionName, amount)
 	local newLevel = character:GetAttribute("Level")
 	humanoid.WalkSpeed = (newLevel < 5) and 20 or 16
 	
-	-- Force UI update (workaround from the original script to redraw the value)
+	-- Force UI update
 	if pointsValue then
 		pointsValue.Value = pointsValue.Value + 1
 		pointsValue.Value = pointsValue.Value - 1
