@@ -53,7 +53,7 @@ local function onPlayerAdded(player)
 	stats.Name = "leaderstats"
 	stats.Parent = player
 
-	-- Use IntValue instead of StringValue for correct sorting in the Roblox leaderboard
+	-- Use IntValue for correct sorting in the Roblox leaderboard
 	local points = Instance.new("IntValue")
 	points.Name = "Points"
 	points.Value = 0
@@ -76,7 +76,6 @@ Players.PlayerAdded:Connect(onPlayerAdded)
 
 -----------------------------------------------
 -- UI formatting functions 
--- (Kept for potential use in the UI)
 -----------------------------------------------
 
 local function formatAbbreviation(n)
